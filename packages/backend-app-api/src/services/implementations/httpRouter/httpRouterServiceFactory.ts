@@ -55,6 +55,7 @@ export const httpRouterServiceFactory = createServiceFactory(
       rootHttpRouter,
       lifecycle,
     }) {
+      let hasRegistedCookieAuthRefreshMiddleware = false;
       const getPath = options?.getPath ?? (id => `/api/${id}`);
       const path = getPath(plugin.getId());
 
@@ -76,8 +77,12 @@ export const httpRouterServiceFactory = createServiceFactory(
         },
         addAuthPolicy(policy: HttpRouterServiceAuthPolicy): void {
           credentialsBarrier.addAuthPolicy(policy);
-          if (policy.allow === 'user-cookie') {
-            // TODO: Make sure this is only added once
+          if (
+            policy.allow === 'user-cookie' &&
+            !hasRegistedCookieAuthRefreshMiddleware
+          ) {
+            // Only add the cookie refresh middleware once
+            hasRegistedCookieAuthRefreshMiddleware = true;
             router.use(createCookieAuthRefreshMiddleware({ httpAuth }));
           }
         },
